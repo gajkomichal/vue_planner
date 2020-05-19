@@ -1,6 +1,11 @@
 <template>
-  <div class="event" :style="state.eventStyle">
-    {{ scheduledEvent.name }}
+  <div class="event" :style="state.eventStyle" draggable @dragstart="startDrag">
+    <h2>{{ scheduledEvent.name }}</h2>
+    <h3>
+      {{ scheduledEvent.startTime.format('h:mma') }}-{{
+        scheduledEvent.endTime.format('h:mma')
+      }}
+    </h3>
   </div>
 </template>
 
@@ -35,8 +40,21 @@ export default {
         };
       }),
     });
+
+    const startDrag = (e) => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.dropEffect = 'move';
+      e.dataTransfer.setData('event', JSON.stringify(props.scheduledEvent));
+
+      let schedule = document.getElementById('planner-schedule');
+      let offset = e.pageY - e.target.offsetTop + schedule.scrollTop;
+
+      e.dataTransfer.setData('offset', offset);
+    };
+
     return {
       state,
+      startDrag,
     };
   },
 };
