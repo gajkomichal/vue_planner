@@ -50,7 +50,7 @@ class PlannerStore extends Store {
   }
 
   editEvent(newEvent) {
-    let e = this.state.scheduledEvents.find((e) => e.id === newEvent.is);
+    let e = this.state.scheduledEvents.find((e) => e.id === newEvent.id);
     if (!e) {
       return false;
     }
