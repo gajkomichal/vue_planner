@@ -1,29 +1,112 @@
 <template>
   <div>
     <div id="planner-header">
-      <div id="planner-title"></div>
+      <div id="planner-title">
+        <h2>{{ state.startOfWeek.format('MMMM') }}</h2>
+        <span>{{ state.startOfWeek.format('YYYY') }}</span>
+      </div>
       <div id="planner-days">
-        <div id="planner-nav"></div>
-        <div v-for="i in 7" :key="i" class="planner-header__day"></div>
+        <div id="planner-nav">
+          <div>
+            <button @click="changeWeek(-1)">&lt;</button>
+            <button @click="changeWeek(0)">Today</button>
+            <button @click="changeWeek(1)">&gt;</button>
+          </div>
+        </div>
+        <div v-for="i in 7" :key="i" class="planner-header__day">
+          <div
+            :class="{
+              'planner-header__day-today': state.startOfWeek
+                .clone()
+                .add(i - 1, 'days')
+                .isSame(currentDate, 'day'),
+            }"
+          >
+            <h2>
+              {{
+                state.startOfWeek
+                  .clone()
+                  .add(i - 1, 'days')
+                  .format('D')
+              }}
+            </h2>
+            <h3>
+              {{
+                state.startOfWeek
+                  .clone()
+                  .add(i - 1, 'days')
+                  .format('ddd')
+              }}
+            </h3>
+          </div>
+        </div>
       </div>
     </div>
     <div id="planner-schedule">
-      <div id="schedule__sidebar"></div>
-      <div id="schedule__view"></div>
+      <div id="schedule__sidebar">
+        <div class="schedule__hour" v-for="i in 23" :key="i">
+          <span>{{ moment(i, 'HH').format('h A') }}</span>
+        </div>
+      </div>
+      <div id="schedule__view">
+        <day-display
+          v-for="i in 7"
+          :key="i"
+          :date="state.startOfWeek.clone().add(i - 1, 'days')"
+        />
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { ref, reactive, onUnmounted } from 'vue';
 import moment from 'moment';
 import DayDisplay from '../components/DayDisplay.vue';
+
+const useCurrentDate = () => {
+  const currentDate = ref(moment());
+
+  const updateDate = () => {
+    currentDate.value = moment();
+  };
+
+  const updateDateInterval = setInterval(updateDate, 1000);
+
+  onUnmounted(() => {
+    clearInterval(updateDateInterval);
+  });
+
+  return {
+    currentDate,
+  };
+};
 
 export default {
   components: {
     DayDisplay,
   },
   setup() {
-    return {};
+    const { currentDate } = useCurrentDate();
+
+    const state = reactive({
+      startOfWeek: moment().day('Sunday'),
+    });
+
+    const changeWeek = (dir) => {
+      if (dir === 0) {
+        state.startOfWeek = moment().day('Sunday');
+      } else {
+        state.startOfWeek = state.startOfWeek.clone().add(7 * dir, 'days');
+      }
+    };
+
+    return {
+      currentDate,
+      state,
+      changeWeek,
+      moment,
+    };
   },
 };
 </script>
