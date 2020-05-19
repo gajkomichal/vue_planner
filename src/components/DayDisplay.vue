@@ -4,6 +4,9 @@
       v-for="e in state.daysEvents"
       :key="e.id"
       :scheduled-event="e"
+      @dragover.prevent
+      @dragenter.prevent
+      @drop="dropEvent"
     />
     <div
       class="hour"
@@ -21,6 +24,7 @@ import { reactive, computed } from 'vue';
 import moment from 'moment';
 import ScheduledEvent from './ScheduledEvent.vue';
 import { store } from '../store';
+import { useDragAndDrop } from '../logic/drag-and-drop.js';
 
 export default {
   props: {
@@ -30,6 +34,7 @@ export default {
     ScheduledEvent,
   },
   setup(props) {
+    const { dropEvent } = useDragAndDrop(props);
     const state = reactive({
       daysEvents: computed(() => {
         let state = store.getState();
@@ -38,27 +43,6 @@ export default {
         );
       }),
     });
-
-    const dropEvent = (e) => {
-      let ev = JSON.parse(e.dataTransfer.getData('event'));
-      let offset = parseInt(e.dataTransfer.getData('offset'));
-      let schedule = document.getElementById('planner-schedule');
-
-      let mouseY = e.clientY + schedule.scrollTop - offset;
-      let hour = Math.floor(mouseY / 50);
-      let minutes = (Math.round(mouseY - hour * 50) / 50) * 60;
-      minutes = Math.round(minutes / 15) * 15;
-
-      let startTime = props.date.clone().hour(hour).minute(minutes);
-      let duration = moment(ev.endTime).diff(ev.startTime);
-      let endTime = startTime.clone().add(duration, 'ms');
-
-      store.editEvent({
-        ...ev,
-        startTime,
-        endTime,
-      });
-    };
 
     return {
       dropEvent,
